@@ -113,6 +113,8 @@
     const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--case-w")) || 180;
     state.radius = Math.round((w / 2 / Math.tan(Math.PI / N)) * 1.15);
     ring.style.setProperty("--radius", `${state.radius}px`);
+    const extent = 2 * state.radius + w * 1.2;
+    state.scale = Math.min(1, (stage.clientWidth - 16) / extent);
   }
 
   // ---------- Animation loop ----------
@@ -160,7 +162,7 @@
       state.angle -= AUTO_SPEED * dt;
     }
 
-    ring.style.transform = `translateZ(${-state.radius}px) rotateY(${state.angle}deg)`;
+    ring.style.transform = `scale(${state.scale || 1}) translateZ(${-state.radius}px) rotateY(${state.angle}deg)`;
 
     const front = (((Math.round(-state.angle / STEP) % N) + N) % N);
     if (front !== state.frontIndex) {
