@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>October Movie Night</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>October Movie Night</h1>
+      <p class="tagline">Spin the shelf. Pick a case. If you dare.</p>
+    </header>
+
+    <main>
+      <section class="stage" aria-label="Movie carousel">
+        <div class="ring" id="ring"></div>
+      </section>
+
+      <div class="controls">
+        <button class="ctrl" id="prev" aria-label="Previous movie">&#9664;</button>
+        <button class="ctrl" id="toggle" aria-label="Pause rotation">&#10074;&#10074;</button>
+        <button class="ctrl" id="next" aria-label="Next movie">&#9654;</button>
+      </div>
+      <p class="hint">Drag or use the arrow keys to spin. Click a case to open it.</p>
+    </main>
+
+    <dialog class="modal" id="modal" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      <div class="modal-body">
+        <div class="modal-poster">
+          <img id="modal-img" alt="" />
+          <div class="poster-fallback" id="modal-fallback"></div>
+        </div>
+        <div class="modal-info">
+          <h2 id="modal-title"></h2>
+          <p class="modal-year" id="modal-year"></p>
+          <p id="modal-desc"></p>
+          <h3>Why it's a classic</h3>
+          <p id="modal-why"></p>
+          <h3>Fright-o-meter</h3>
+          <div class="ratings" id="modal-ratings"></div>
+          <a class="wiki-link" id="modal-wiki" target="_blank" rel="noopener">Read more on Wikipedia &rarr;</a>
+        </div>
+      </div>
+    </dialog>
+
+    <footer class="site-footer">
+      Poster images are loaded from Wikipedia and used under fair use for identification and commentary. All rights belong to their respective owners.
+    </footer>
+
+    <script src="movies.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
