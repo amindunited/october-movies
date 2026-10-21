@@ -1,13 +1,22 @@
-(() => {
-  const movies = window.MOVIES;
-  const N = movies.length;
-  const STEP = 360 / N;
+(async () => {
+  const response = await fetch("movies.json");
+  if (!response.ok) {
+    throw new Error(`Failed to load movie data: ${response.status} ${response.statusText}`);
+  }
+  const allMovies = await response.json();
+  let movies = allMovies.filter((movie) => !movie.watched);
+
+  let N = movies.length;
+  let STEP = N ? 360 / N : 0;
   const AUTO_SPEED = 8; // degrees per second
   const DRAG_FACTOR = 0.25; // degrees per pixel dragged
 
   const stage = document.querySelector(".stage");
   const ring = document.getElementById("ring");
   const toggleBtn = document.getElementById("toggle");
+  const showWatched = document.getElementById("show-watched");
+  const emptyState = document.getElementById("empty-state");
+  const controls = document.querySelector(".controls");
   const modal = document.getElementById("modal");
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -69,47 +78,62 @@
   }
 
   // ---------- Build the cases ----------
-  const cases = movies.map((movie, i) => {
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.style.transform = `rotateY(${i * STEP}deg) translateZ(var(--radius))`;
+  let cases = [];
 
-    const btn = document.createElement("button");
-    btn.className = "case";
-    btn.type = "button";
-    btn.setAttribute("aria-label", `${movie.title} (${movie.year}) — open details`);
-    btn.innerHTML = `
-      <div class="face cover">
-        <div class="sleeve">
-          <img alt="" draggable="false" />
-          <div class="poster-fallback">${fallbackMarkup(movie)}</div>
+  function renderCases() {
+    ring.replaceChildren();
+    cases = movies.map((movie, i) => {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      slot.style.transform = `rotateY(${i * STEP}deg) translateZ(var(--radius))`;
+
+      const btn = document.createElement("button");
+      btn.className = "case";
+      btn.type = "button";
+      btn.setAttribute("aria-label", `${movie.title} (${movie.year}) — open details`);
+      btn.innerHTML = `
+        <div class="face cover">
+          <div class="sleeve">
+            <img alt="" draggable="false" />
+            <div class="poster-fallback">${fallbackMarkup(movie)}</div>
+          </div>
         </div>
-      </div>
-      <div class="face spine"><span>${escapeHtml(movie.title)}</span></div>
-      <div class="face edge"></div>
-      <div class="face back">${escapeHtml(movie.title)}</div>
-    `;
+        <div class="face spine"><span>${escapeHtml(movie.title)}</span></div>
+        <div class="face edge"></div>
+        <div class="face back">${escapeHtml(movie.title)}</div>
+      `;
 
-    btn.addEventListener("click", () => {
-      if (state.suppressClick) return;
-      openModal(i);
+      btn.addEventListener("click", () => {
+        if (state.suppressClick) return;
+        openModal(i);
+      });
+      // keyboard tabbing brings the focused case round to the front
+      btn.addEventListener("focus", () => {
+        if (btn.matches(":focus-visible")) goTo(i);
+      });
+
+      slot.appendChild(btn);
+      ring.appendChild(slot);
+
+      const sleeve = btn.querySelector(".sleeve");
+      fetchPoster(movie).then(({ thumb }) => showImage(sleeve, sleeve.querySelector("img"), thumb, movie));
+
+      return btn;
     });
-    // keyboard tabbing brings the focused case round to the front
-    btn.addEventListener("focus", () => {
-      if (btn.matches(":focus-visible")) goTo(i);
-    });
-
-    slot.appendChild(btn);
-    ring.appendChild(slot);
-
-    const sleeve = btn.querySelector(".sleeve");
-    fetchPoster(movie).then(({ thumb }) => showImage(sleeve, sleeve.querySelector("img"), thumb, movie));
-
-    return btn;
-  });
+    stage.hidden = N === 0;
+    controls.hidden = N === 0;
+    emptyState.hidden = N !== 0;
+    layout();
+  }
 
   // ---------- Layout ----------
   function layout() {
+    if (N === 0) {
+      state.radius = 0;
+      state.scale = 1;
+      ring.style.setProperty("--radius", "0px");
+      return;
+    }
     const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--case-w")) || 180;
     state.radius = Math.round((w / 2 / Math.tan(Math.PI / N)) * 1.15);
     ring.style.setProperty("--radius", `${state.radius}px`);
@@ -164,11 +188,13 @@
 
     ring.style.transform = `scale(${state.scale || 1}) translateZ(${-state.radius}px) rotateY(${state.angle}deg)`;
 
-    const front = (((Math.round(-state.angle / STEP) % N) + N) % N);
-    if (front !== state.frontIndex) {
-      cases[state.frontIndex]?.classList.remove("front");
-      cases[front].classList.add("front");
-      state.frontIndex = front;
+    if (N > 0) {
+      const front = (((Math.round(-state.angle / STEP) % N) + N) % N);
+      if (front !== state.frontIndex) {
+        cases[state.frontIndex]?.classList.remove("front");
+        cases[front].classList.add("front");
+        state.frontIndex = front;
+      }
     }
 
     requestAnimationFrame(tick);
@@ -221,6 +247,16 @@
   // ---------- Controls ----------
   document.getElementById("prev").addEventListener("click", () => step(-1));
   document.getElementById("next").addEventListener("click", () => step(1));
+  showWatched.addEventListener("change", () => {
+    movies = showWatched.checked ? allMovies : allMovies.filter((movie) => !movie.watched);
+    N = movies.length;
+    STEP = N ? 360 / N : 0;
+    state.angle = 0;
+    state.target = null;
+    state.velocity = 0;
+    state.frontIndex = -1;
+    renderCases();
+  });
 
   function renderToggle() {
     toggleBtn.innerHTML = state.userPaused ? "&#9654;&#xFE0E;" : "&#10074;&#10074;";
@@ -233,7 +269,7 @@
   renderToggle();
 
   document.addEventListener("keydown", (e) => {
-    if (modal.open) return;
+    if (modal.open || N === 0) return;
     if (e.key === "ArrowRight") step(1);
     else if (e.key === "ArrowLeft") step(-1);
     else return;
@@ -297,7 +333,7 @@
   });
 
   // ---------- Go ----------
-  layout();
+  renderCases();
   window.addEventListener("resize", layout);
   requestAnimationFrame(tick);
 })();

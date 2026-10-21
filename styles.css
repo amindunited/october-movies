@@ -72,6 +72,21 @@ main {
 }
 
 /* ---------- Carousel ---------- */
+.watched-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.watched-toggle input {
+  accent-color: var(--orange);
+}
+
 .stage {
   position: relative;
   height: calc(var(--case-h) + 160px);
@@ -288,6 +303,16 @@ main {
   display: flex;
   justify-content: center;
   gap: 0.75rem;
+}
+
+.controls[hidden] {
+  display: none;
+}
+
+.empty-state {
+  margin: 3rem 1rem;
+  text-align: center;
+  color: var(--muted);
 }
 
 .ctrl {

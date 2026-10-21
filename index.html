@@ -16,9 +16,14 @@
     </header>
 
     <main>
+      <label class="watched-toggle">
+        <input type="checkbox" id="show-watched" />
+        Show watched
+      </label>
       <section class="stage" aria-label="Movie carousel">
         <div class="ring" id="ring"></div>
       </section>
+      <p class="empty-state" id="empty-state" hidden>No movies to show.</p>
 
       <div class="controls">
         <button class="ctrl" id="prev" aria-label="Previous movie">&#9664;</button>
@@ -52,7 +57,6 @@
       Poster images are loaded from Wikipedia and used under fair use for identification and commentary. All rights belong to their respective owners.
     </footer>
 
-    <script src="movies.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
